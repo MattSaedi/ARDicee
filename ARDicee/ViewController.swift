@@ -90,6 +90,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         rollAll()
     }
+    @IBAction func RemoveAllDice(_ sender: UIBarButtonItem) {
+        if !diceArray.isEmpty{
+            for dice in diceArray {
+                dice.removeFromParentNode()
+            }
+        }
+    }
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         if anchor is ARPlaneAnchor {
             let planeAnchor = anchor as! ARPlaneAnchor
