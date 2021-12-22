@@ -20,7 +20,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Set the view's delegate
         sceneView.delegate = self
-        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
         // Show statistics such as fps and timing information
         sceneView.autoenablesDefaultLighting = true
         
@@ -43,35 +42,31 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             let touchLocation = touch.location(in: sceneView)
             let result = sceneView.hitTest(touchLocation, types: .existingPlaneUsingExtent)
             if let hitResult = result.first {
-                // Create a new scene
-                let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
-                if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
-                    diceNode.position = SCNVector3(
-                        x: hitResult.worldTransform.columns.3.x,
-                        y: hitResult.worldTransform.columns.3.y + diceNode.boundingSphere.radius,
-                        z: hitResult.worldTransform.columns.3.z
-                    )
-                    diceArray.append(diceNode)
-                    sceneView.scene.rootNode.addChildNode(diceNode)
-                    roll(dice: diceNode)
-                }
+                addDice(atLocation: hitResult)
             }
         }
     }
     
-    func rollAll(){
-        if !diceArray.isEmpty{
-            for dice in diceArray {
-                roll(dice:dice)
-            }
+    func addDice(atLocation location : ARHitTestResult){
+        // Create a new scene
+        let diceScene = SCNScene(named: "art.scnassets/diceCollada.scn")!
+        if let diceNode = diceScene.rootNode.childNode(withName: "Dice", recursively: true){
+            diceNode.position = SCNVector3(
+                x: location.worldTransform.columns.3.x,
+                y: location.worldTransform.columns.3.y + diceNode.boundingSphere.radius,
+                z: location.worldTransform.columns.3.z
+            )
+            diceArray.append(diceNode)
+            sceneView.scene.rootNode.addChildNode(diceNode)
+            roll(dice: diceNode)
         }
     }
-    
     func roll(dice:SCNNode){
         let randomX = Float(arc4random_uniform(4) + 1) * (Float.pi/2)
         let randomZ = Float(arc4random_uniform(4) + 1) * (Float.pi/2)
@@ -83,6 +78,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                 duration: 0.5)
         )
     }
+    
+    func rollAll(){
+        if !diceArray.isEmpty{
+            for dice in diceArray {
+                roll(dice:dice)
+            }
+        }
+    }
+    
+    
     
     @IBAction func rollAgain(_ sender: UIBarButtonItem) {
         rollAll()
@@ -97,6 +102,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             }
         }
     }
+    
+    //MARK: - ARSCNVIEWDELEGATEMETHOD
+    
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         if anchor is ARPlaneAnchor {
             let planeAnchor = anchor as! ARPlaneAnchor
